@@ -25,25 +25,32 @@ function mplayer.playSoundFile(str1)
             mplayer.song.length = getSoundLength(mplayer.element)
             mplayer.gtimer = setTimer(mplayer.generateHeights,50,0)
             mplayer.generating = true
+            mplayer.file = str1
         end
     end
 end
 function mplayer.generateHeights()
+    if(mplayer.cycle == 257 or not isElement(mplayer.element)) then
+        killTimer(mplayer.gtimer)
+        mplayer.gtimer = false
+        mplayer.generating = false
+        if(not isElement(mplayer.element)) then
+            mplayer.element = playSound(mplayer.file)
+            if(not mplayer.element) then return end
+        end
+        setSoundPosition(mplayer.element,0.0)
+        setSoundVolume(mplayer.element,1.0)
+        mplayer.playing = true
+        addEventHandler("onClientSoundStopped",mplayer.element,mplayer.onClientSoundStopped)
+        return
+    end
     local left,right = getSoundLevelData(mplayer.element)
     if(left == false) then return end
     mplayer.heights[mplayer.cycle+1] = {}
     mplayer.heights[mplayer.cycle+1].left = math.floor(128*left/32768)
     mplayer.heights[mplayer.cycle+1].right = math.floor(64*right/32768)
     mplayer.cycle = mplayer.cycle+1
-    if(mplayer.cycle == 257) then
-        killTimer(mplayer.gtimer)
-        mplayer.gtimer = false
-        setSoundPosition(mplayer.element,0.0)
-        setSoundVolume(mplayer.element,1.0)
-        mplayer.generating = false
-        mplayer.playing = true
-        addEventHandler("onClientSoundStopped",mplayer.element,mplayer.onClientSoundStopped)
-    else
+    if(mplayer.cycle ~= 257) then
         setSoundPosition(mplayer.element,mplayer.song.length/257*(mplayer.cycle))
     end
 end
