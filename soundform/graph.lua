@@ -7,7 +7,7 @@ function mplayer.playSoundFile(str1)
         mplayer.playing = false
         mplayer.heights = {}
     end
-    mplayer.cycle = 1
+    mplayer.cycle = 0
     if(fileExists(str1)) then
         mplayer.element = playSound(str1)
         if(mplayer.element) then
@@ -29,6 +29,12 @@ function mplayer.playSoundFile(str1)
     end
 end
 function mplayer.generateHeights()
+    local left,right = getSoundLevelData(mplayer.element)
+    if(left == false) then return end
+    mplayer.heights[mplayer.cycle+1] = {}
+    mplayer.heights[mplayer.cycle+1].left = math.floor(128*left/32768)
+    mplayer.heights[mplayer.cycle+1].right = math.floor(64*right/32768)
+    mplayer.cycle = mplayer.cycle+1
     if(mplayer.cycle == 257) then
         killTimer(mplayer.gtimer)
         mplayer.gtimer = false
@@ -37,15 +43,9 @@ function mplayer.generateHeights()
         mplayer.generating = false
         mplayer.playing = true
         addEventHandler("onClientSoundStopped",mplayer.element,mplayer.onClientSoundStopped)
-        return
+    else
+        setSoundPosition(mplayer.element,mplayer.song.length/257*(mplayer.cycle))
     end
-    setSoundPosition(mplayer.element,mplayer.song.length/257*(mplayer.cycle))
-    local left,right = getSoundLevelData(mplayer.element)
-    if(left == false) then return end
-    mplayer.heights[mplayer.cycle] = {}
-    mplayer.heights[mplayer.cycle].left = math.floor(128*left/32768)
-    mplayer.heights[mplayer.cycle].right = math.floor(64*right/32768)
-    mplayer.cycle = mplayer.cycle+1
 end
 function mplayer.onClientSoundStopped()
     mplayer.playing = false
@@ -104,7 +104,7 @@ function mplayer.onClientRender()
 end
 function mplayer.onClientResourceStart(res)
     if(getResourceName(res) == "soundform") then
-        mplayer.cycle = 1
+        mplayer.cycle = 0
         mplayer.gtimer = false
         mplayer.song = {}
         mplayer.screen = {}
