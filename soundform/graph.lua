@@ -145,7 +145,6 @@ end
 function mplayer.onClientResourceStart(res)
     if(getResourceName(res) == "soundform") then
         mplayer.cycle = 0
-        mplayer.gtimer = false
         mplayer.song = {}
         mplayer.screen = {}
         mplayer.heights = {}
