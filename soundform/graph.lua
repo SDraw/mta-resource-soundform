@@ -23,36 +23,42 @@ function mplayer.playSoundFile(str1)
                 mplayer.song.album = "No Album"
             end
             mplayer.song.length = getSoundLength(mplayer.element)
-            mplayer.gtimer = setTimer(mplayer.generateHeights,50,0)
+            addEventHandler("onClientRender",root,mplayer.generateHeights)
             mplayer.generating = true
             mplayer.file = str1
         end
     end
 end
 function mplayer.generateHeights()
-    if(mplayer.cycle == 257 or not isElement(mplayer.element)) then
-        killTimer(mplayer.gtimer)
-        mplayer.gtimer = false
-        mplayer.generating = false
-        if(not isElement(mplayer.element)) then
-            mplayer.element = playSound(mplayer.file)
-            if(not mplayer.element) then return end
-        end
-        setSoundPosition(mplayer.element,0.0)
-        setSoundVolume(mplayer.element,1.0)
-        mplayer.playing = true
-        addEventHandler("onClientSoundStopped",mplayer.element,mplayer.onClientSoundStopped)
-        return
-    end
     local left,right = getSoundLevelData(mplayer.element)
-    if(left == false) then return end
-    mplayer.heights[mplayer.cycle+1] = {}
-    mplayer.heights[mplayer.cycle+1].left = math.floor(128*left/32768)
-    mplayer.heights[mplayer.cycle+1].right = math.floor(64*right/32768)
-    mplayer.cycle = mplayer.cycle+1
-    if(mplayer.cycle ~= 257) then
-        setSoundPosition(mplayer.element,mplayer.song.length/257*(mplayer.cycle))
+    if(left ~= false) then
+        mplayer.heights[mplayer.cycle+1] = {}
+        mplayer.heights[mplayer.cycle+1].left = math.floor(128*left/32768)
+        mplayer.heights[mplayer.cycle+1].right = math.floor(64*right/32768)
+    else
+        mplayer.heights[mplayer.cycle+1] = {}
+        mplayer.heights[mplayer.cycle+1].left = 0
+        mplayer.heights[mplayer.cycle+1].right = 0
     end
+    outputDebugString("Got for cycle "..(mplayer.cycle+1))
+    mplayer.cycle = mplayer.cycle+1
+    if(mplayer.cycle ~= 1280) then
+        setSoundPosition(mplayer.element,mplayer.song.length/1280*(mplayer.cycle))
+    else
+        mplayer.stopGenerating()
+    end
+end
+function mplayer.stopGenerating()
+    removeEventHandler("onClientRender",root,mplayer.generateHeights)
+    mplayer.generating = false
+    if(not isElement(mplayer.element)) then
+        mplayer.element = playSound(mplayer.file)
+        if(not mplayer.element) then return end
+    end
+    setSoundPosition(mplayer.element,0.0)
+    setSoundVolume(mplayer.element,1.0)
+    mplayer.playing = true
+    addEventHandler("onClientSoundStopped",mplayer.element,mplayer.onClientSoundStopped)
 end
 function mplayer.onClientSoundStopped()
     mplayer.playing = false
@@ -71,8 +77,8 @@ function mplayer.onClientRender()
             dxDrawRectangle(mplayer.screen.x/2-640+5*(i-1),mplayer.screen.y/2,4,ft,tocolor(255,187,153))
         end
         dxDrawRectangle(mplayer.screen.x/2-50,mplayer.screen.y/2-20,100,40,tocolor(0,0,0,127))
-        dxDrawText("GENERATING\n"..math.floor(mplayer.cycle/256*100).."%",mplayer.screen.x/2-44,mplayer.screen.y/2-19,mplayer.screen.x/2+46,mplayer.screen.y/2+21,tocolor(0,0,0,127),1,mplayer.fonts[1],"center","center")
-        dxDrawText("GENERATING\n"..math.floor(mplayer.cycle/256*100).."%",mplayer.screen.x/2-45,mplayer.screen.y/2-20,mplayer.screen.x/2+45,mplayer.screen.y/2+20,tocolor(255,255,255),1,mplayer.fonts[1],"center","center")
+        dxDrawText("GENERATING\n"..math.floor(mplayer.cycle/1280*100).."%",mplayer.screen.x/2-44,mplayer.screen.y/2-19,mplayer.screen.x/2+46,mplayer.screen.y/2+21,tocolor(0,0,0,127),1,mplayer.fonts[1],"center","center")
+        dxDrawText("GENERATING\n"..math.floor(mplayer.cycle/1280*100).."%",mplayer.screen.x/2-45,mplayer.screen.y/2-20,mplayer.screen.x/2+45,mplayer.screen.y/2+20,tocolor(255,255,255),1,mplayer.fonts[1],"center","center")
         
     else
         if(mplayer.playing == true) then
@@ -81,27 +87,22 @@ function mplayer.onClientRender()
             local pos = getSoundPosition(mplayer.element)
             local size = math.floor(1280*pos/mplayer.song.length)
             local _,lp = math.modf(1280*pos/mplayer.song.length)
-            local part = (size-size%5)/5
-            for i=1,part do
-                dxDrawRectangle(mplayer.screen.x/2-640+5*(i-1),mplayer.screen.y/2-mplayer.heights[i].left,4,mplayer.heights[i].left,tocolor(255,85,0))
-                dxDrawRectangle(mplayer.screen.x/2-640+5*(i-1),mplayer.screen.y/2,4,mplayer.heights[i].right,tocolor(255,187,153))
+            for i=0,size-1 do
+                dxDrawRectangle(mplayer.screen.x/2-640+i,mplayer.screen.y/2-mplayer.heights[i+1].left,1,mplayer.heights[i+1].left,tocolor(255,85,0))
+                dxDrawRectangle(mplayer.screen.x/2-640+i,mplayer.screen.y/2,1,mplayer.heights[i+1].right,tocolor(255,187,153))
             end
-            for i=part+1,#mplayer.heights do
-                dxDrawRectangle(mplayer.screen.x/2-640+5*(i-1),mplayer.screen.y/2-mplayer.heights[i].left,4,mplayer.heights[i].left,tocolor(255,255,255))
-                dxDrawRectangle(mplayer.screen.x/2-640+5*(i-1),mplayer.screen.y/2,4,mplayer.heights[i].right,tocolor(255,255,255))
+            for i=size,#mplayer.heights-1 do
+                dxDrawRectangle(mplayer.screen.x/2-640+i,mplayer.screen.y/2-mplayer.heights[i+1].left,1,mplayer.heights[i+1].left,tocolor(255,255,255))
+                dxDrawRectangle(mplayer.screen.x/2-640+i,mplayer.screen.y/2,1,mplayer.heights[i+1].right,tocolor(255,255,255))
+
             end
-            for i=1,size%5 do
-                dxDrawRectangle(mplayer.screen.x/2-640+5*part+(i-1),mplayer.screen.y/2-mplayer.heights[part+1].left,1,mplayer.heights[part+1].left,tocolor(255,85,0))
-                dxDrawRectangle(mplayer.screen.x/2-640+5*part+(i-1),mplayer.screen.y/2,1,mplayer.heights[part+1].right,tocolor(255,187,153))
+            if(size < 1280) then
+                dxDrawRectangle(mplayer.screen.x/2-640+size,mplayer.screen.y/2-mplayer.heights[size+1].left,1,mplayer.heights[size+1].left,tocolor(255,85,0,math.floor(255*lp)))
+                dxDrawRectangle(mplayer.screen.x/2-640+size,mplayer.screen.y/2,1,mplayer.heights[size+1].right,tocolor(255,187,153,math.floor(255*lp)))
             end
-            if(size%5 ~= 4) then
-                dxDrawRectangle(mplayer.screen.x/2-640+5*part+size%5,mplayer.screen.y/2-mplayer.heights[part+1].left,1,mplayer.heights[part+1].left,tocolor(255,85,0,math.floor(255*lp)))
-                dxDrawRectangle(mplayer.screen.x/2-640+5*part+size%5,mplayer.screen.y/2,1,mplayer.heights[part+1].right,tocolor(255,187,153,math.floor(255*lp)))
-            end
-        
-            dxDrawRectangle(mplayer.screen.x/2-640+size-49,mplayer.screen.y/2-128+98,98,30,tocolor(0,0,0))
-            dxDrawRectangle(mplayer.screen.x/2-640+size-50,mplayer.screen.y/2-128+98,1,30,tocolor(0,0,0,math.floor(255*(1.0-lp))))
-            dxDrawRectangle(mplayer.screen.x/2-640+size+49,mplayer.screen.y/2-128+98,1,30,tocolor(0,0,0,math.floor(255*lp)))
+            dxDrawRectangle(mplayer.screen.x/2-640+size-49,mplayer.screen.y/2-128+98,98,30,tocolor(0,0,0,63))
+            dxDrawRectangle(mplayer.screen.x/2-640+size-50,mplayer.screen.y/2-128+98,1,30,tocolor(0,0,0,math.floor(63*(1.0-lp))))
+            dxDrawRectangle(mplayer.screen.x/2-640+size+49,mplayer.screen.y/2-128+98,1,30,tocolor(0,0,0,math.floor(63*lp)))
             dxDrawText(tostring(math.floor(pos/60))..":"..string.format("%02d",(math.floor(pos)%60)).." | "..math.floor(mplayer.song.length/60)..":"..string.format("%02d",(math.floor(mplayer.song.length)%60)),mplayer.screen.x/2-640+size-50-(1.0-lp),mplayer.screen.y/2-128+98,mplayer.screen.x/2-640+size+50+lp,mplayer.screen.y/2-128+128,tocolor(255,255,255),1,"default","center","center",false,false,false,false,true)
         else
             dxDrawRectangle(mplayer.screen.x/2-640,mplayer.screen.y/2-1,1280,1,tocolor(255,85,0))
