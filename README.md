@@ -1,8 +1,12 @@
-# mta-resource-soundform
+# Soundform
 Demonstration resource of sound visualization
 https://youtu.be/8aZ7_nfdMzo
-SegoeUI font is owned by Microsoft Corporation.
-You have to add your own 'sound.mp3' file in resource folder and use 'graph' command.
+
+# Usage
+Use console command
+```
+sf_play [path to sound file]
+```
 
 #ZLIB license
 Copyright (c) 2015 SDraw
